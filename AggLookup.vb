@@ -68,7 +68,7 @@ Function AggLookup(ByVal choice As String, ByVal items As Object)
             Return 0
         End If
     Else
-        Select Case choice
+        Select Case choice.ToLower
             Case "sum"
                 Return sum
             Case "count"
