@@ -1,91 +1,112 @@
+
 'Allows users to adjust the aggregation type of lookupsets in a cell
 Function AggLookup(ByVal choice As String, ByVal items As Object)
 
-    'Ensure passed array is not empty
-	'Return a zero so you don't have to allow for Nothing
-    If items Is Nothing Then
+    'Ensure passed array is not null or empty
+    'Return a zero so you don't have to allow for Nothing
+    If items Is Nothing OrElse Not items.length > 0 Then
         Return 0
+
     End If
 
+    'Call the method specifically to handle the option specified; This helps avoid performing operations that aren't necessary
+    Select Case choice.ToLower 'Using ToLower at allows the user to pass in the values without regard to case sensitivity
+        Case "sum"
+            Return GetSumFromObjectArray(items)
 
-    'Define names and data types for all variables
-    Dim current As Decimal
-    Dim sum As Decimal
-    Dim count As Integer
-    Dim min As Decimal
-    Dim max As Decimal
-    Dim err As String
+        Case "count"
+            Return items.length ' As an array, we can just call its Length property and return that
 
-    'Define values for variables where required
-    current = 0
-    sum = 0
-    count = 0
-    err = ""
+        Case "countdistinct"
+            Return GetDistinctCountFromObjectArray(items)
 
-    'Calculate and set variable values
+        Case "avg"
+            Dim runningTotal As Decimal = GetSumFromObjectArray(items)
+            Return runningTotal / items.length
+
+        Case "min"
+            Return GetMinValueFromObjectArray(items)
+
+        Case "max"
+            Return GetMaxValueFromObjectArray(items)
+
+        Case "first"
+            Return items(0)
+
+        Case "last"
+            Return items(items.length - 1)
+
+        Case Else
+            Return 0 'If option provided was not valid, return 0 (could change this to return an appropriate error message for the Dev)
+
+    End Select    
+    return 0 'If nothing was returned yet, something went wrong; return 0 (again, this could be changed to be more informative for the Dev)
+
+End Function
+
+'Self explanatory; Takes an array of object and returns the sum of all Values; Returns 0 if any value is non-numeric
+Private Function GetSumFromObjectArray(items As Object()) As Decimal
+    Dim runningTotal As Decimal = 0
     For Each item As Object In items
-
-        'Calculate Count
-        count += 1
-
-        'Check value is a number
-        If IsNumeric(item) Then
-
-            'Set current
-            current = Convert.ToDecimal(item)
-
-            'Calculate Sum
-            sum += current
-
-            'Calculate Min
-            If min = Nothing Then
-                min = current
-            End If
-            If min > current Then
-                min = current
-            End If
-
-            'Calculate the Max
-            If max = Nothing Then
-                max = current
-            End If
-            If max < current Then
-                max = current
-            End If
-
-            'If value is not a number return "NaN"
+        Dim thisItemAsDecimal As Decimal
+        If Decimal.TryParse(item, thisItemAsDecimal) Then
+            runningTotal += thisItemAsDecimal
         Else
-            err = "NaN"
+            Return 0 'Short circuit; If ANY value is not a number, the entire SUM is invalid, stop evaluating and return 0
         End If
-
     Next
+    Return runningTotal
 
-    'Select and set output based on user choice or parameter one
-    If err = "NaN" Then
-        If choice = "count" Then
-            Return count
+End Function
+
+'Self explanatory; Takes an array of object and returns the lowest of all Values present; Returns 0 if any value is non-numeric (which could be misleading if negative values are possible)
+Private Function GetMinValueFromObjectArray(items As Object()) As Decimal
+    Dim currentMin As Decimal = Decimal.MaxValue 'Default to the max value allowed for a Decimal (Would default to a random value in the array, but it is possible they are not numeric)
+    For Each item As Object In items
+        Dim thisItemAsDecimal As Decimal
+        If Decimal.TryParse(item.ToString, thisItemAsDecimal) Then
+            If thisItemAsDecimal < currentMin Then currentMin = thisItemAsDecimal
         Else
-            Return 0
+            Return 0 'Short circuit; If ANY value is not a number, the entire evaluation is invalid; stop evaluating and return 0
         End If
-    Else
-        Select Case choice.ToLower
-            Case "sum"
-                Return sum
-            Case "count"
-                Return count
-            Case "min"
-                Return min
-            Case "max"
-                Return max
-            Case "avg"
-                'Calculate the average avoiding divide by zero errors
-                If count > 0 Then
-                    Return sum / count
-                Else
-                    Return 0
-                End If
-        End Select
-    End If
+    Next
+    Return currentMin
 
-    'End
+End Function
+
+'Self explanatory; Takes an array of object and returns the highest of all Values present; Returns 0 if any value is non-numeric (which could be misleading if negative values are possible)
+Private Function GetMaxValueFromObjectArray(items As Object()) As Decimal
+    Dim currentMax As Decimal = Decimal.MinValue 'Default to the min value allowed for a Decimal (Would default to a random value in the array, but it is possible they are not numeric)
+    For Each item As Object In items
+        Dim thisItemAsDecimal As Decimal
+        If Decimal.TryParse(item.ToString, thisItemAsDecimal) Then
+            If thisItemAsDecimal > currentMax Then currentMax = thisItemAsDecimal
+        Else
+            Return 0 'Short circuit; If ANY value is not a number, the entire evaluation is invalid; stop evaluating and return 0
+        End If
+    Next
+    Return currentMax
+
+End Function
+
+
+''' <summary>
+''' Returns the count of distinct items in the array; modified from code retrieved from https://stackoverflow.com/questions/38187819/ssrs-code-to-determine-distinct-count-of-a-lookupset
+''' </summary>
+''' <param name="items"></param>
+''' <returns>Integer</returns>
+Public Function GetDistinctCountFromObjectArray(items As Object()) As Integer
+    System.Array.Sort(items)
+    Dim k As Integer = 0
+    If items.Length > 0 Then
+        k = 1
+        For i As Integer = 1 To items.Length - 1
+            If items(i).Equals(items(i - 1)) Then
+                Continue For
+            End If
+            k += 1
+        Next
+    End If
+    Return k
+    
 End Function
