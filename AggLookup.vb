@@ -9,8 +9,8 @@ Function AggLookup(ByVal choice As String, ByVal items As Object)
 
     End If
 
-    'Call the method specifically to handle the option specified; This helps avoid performing operations that aren't necessary
-    Select Case choice.ToLower 'Using ToLower at allows the user to pass in the values without regard to case sensitivity
+    'Call the method specified
+    Select Case choice.ToLower 'Using ToLower allows the user to pass in the values without regard to case sensitivity
         Case "sum"
             Return GetSumFromObjectArray(items)
 
@@ -44,7 +44,6 @@ Function AggLookup(ByVal choice As String, ByVal items As Object)
 
 End Function
 
-'Self explanatory; Takes an array of object and returns the sum of all Values; Returns 0 if any value is non-numeric
 Private Function GetSumFromObjectArray(items As Object()) As Decimal
     Dim runningTotal As Decimal = 0
     For Each item As Object In items
@@ -59,7 +58,6 @@ Private Function GetSumFromObjectArray(items As Object()) As Decimal
 
 End Function
 
-'Self explanatory; Takes an array of object and returns the lowest of all Values present; Returns 0 if any value is non-numeric (which could be misleading if negative values are possible)
 Private Function GetMinValueFromObjectArray(items As Object()) As Decimal
     Dim currentMin As Decimal = Decimal.MaxValue 'Default to the max value allowed for a Decimal (Would default to a random value in the array, but it is possible they are not numeric)
     For Each item As Object In items
@@ -67,14 +65,13 @@ Private Function GetMinValueFromObjectArray(items As Object()) As Decimal
         If Decimal.TryParse(item.ToString, thisItemAsDecimal) Then
             If thisItemAsDecimal < currentMin Then currentMin = thisItemAsDecimal
         Else
-            Return 0 'Short circuit; If ANY value is not a number, the entire evaluation is invalid; stop evaluating and return 0
+            Return 0 'Short circuit
         End If
     Next
     Return currentMin
 
 End Function
 
-'Self explanatory; Takes an array of object and returns the highest of all Values present; Returns 0 if any value is non-numeric (which could be misleading if negative values are possible)
 Private Function GetMaxValueFromObjectArray(items As Object()) As Decimal
     Dim currentMax As Decimal = Decimal.MinValue 'Default to the min value allowed for a Decimal (Would default to a random value in the array, but it is possible they are not numeric)
     For Each item As Object In items
@@ -82,7 +79,7 @@ Private Function GetMaxValueFromObjectArray(items As Object()) As Decimal
         If Decimal.TryParse(item.ToString, thisItemAsDecimal) Then
             If thisItemAsDecimal > currentMax Then currentMax = thisItemAsDecimal
         Else
-            Return 0 'Short circuit; If ANY value is not a number, the entire evaluation is invalid; stop evaluating and return 0
+            Return 0 'Short circuit
         End If
     Next
     Return currentMax
@@ -91,7 +88,7 @@ End Function
 
 
 ''' <summary>
-''' Returns the count of distinct items in the array; modified from code retrieved from https://stackoverflow.com/questions/38187819/ssrs-code-to-determine-distinct-count-of-a-lookupset
+''' Returns the count of distinct items in the array; modified from code retrieved from https://stackoverflow.com/questions/38187819/ssrs-code-to-determine-distinct-count-of-a-lookupset on 5 July 2017.
 ''' </summary>
 ''' <param name="items"></param>
 ''' <returns>Integer</returns>
